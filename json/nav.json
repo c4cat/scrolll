@@ -1,0 +1,34 @@
+[
+	{
+		"id":"1",
+		"name":"about",
+		"type":"about"
+	},
+	{
+		"id":"2",
+		"name":"contact",
+		"type":"contact"
+
+	},
+	{
+		"id":"3",
+		"name":"links",
+		"type":"aroundBox",
+		"json":"links.json"
+	},
+	{
+		"id":"4",
+		"name":"image",
+		"type":"aroundBox"
+	},
+	{
+		"id":"5",
+		"name":"works",
+		"type":"aroundBox"
+	},
+	{
+		"id":"6",
+		"name":"six",
+		"type":"aroundBox"
+	}
+]

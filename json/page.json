@@ -1,0 +1,27 @@
+[
+	{
+		"id":"1",
+		"direction":"horizontal",
+		"color":"#3498db"
+	},
+	{
+		"id":"2",
+		"direction":"vertical",
+		"color":"#3498db"
+	},
+	{
+		"id":"3",
+		"direction":"horizontal",
+		"color":"#3498db"
+	},
+	{
+		"id":"4",
+		"direction":"vertical",
+		"color":"#3498db"
+	},
+	{
+		"id":"5",
+		"direction":"vertical",
+		"color":"#34495e"
+	},
+]
