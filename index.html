@@ -12,6 +12,9 @@
     <link rel="stylesheet" href="./static/css/less.css">
     <link rel="stylesheet" href="./static/css/parallax.css">
     <link rel="stylesheet" href="./static/css/parallax-animation.css">
+    <script type="text/template" id="page-template">
+        <section class="page" data-direction="<%= direction %>" data-id="<%= id %>" style="background-color:<%= color %>;width:<%= width %>px;height:<%= height %>px"></section>
+    </script>
 </head>
 <body>
     <div id="container"></div>
@@ -20,8 +23,4 @@
     <script type='text/javascript' src='./static/js/underscore.js'></script>
     <script type='text/javascript' src='./static/js/backbone.min.js'></script>
     <script type='text/javascript' src='./static/js/main.js'></script>
-    
-    <script type="text/template" id="page-template">
-        <section class="page" data-direction="<%= direction %>" data-id="<%= id %>" style="background-color:<%= color %>">
-    </script>
 </html>

@@ -7,12 +7,12 @@
 	{
 		"id":"2",
 		"direction":"vertical",
-		"color":"#3498db"
+		"color":"#40d47e"
 	},
 	{
 		"id":"3",
 		"direction":"horizontal",
-		"color":"#3498db"
+		"color":"#ff8c81"
 	},
 	{
 		"id":"4",
@@ -23,5 +23,5 @@
 		"id":"5",
 		"direction":"vertical",
 		"color":"#34495e"
-	},
+	}
 ]
