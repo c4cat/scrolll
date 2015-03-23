@@ -2,26 +2,37 @@
 	{
 		"id":"1",
 		"direction":"horizontal",
-		"color":"#3498db"
+		"color":"#3498db",
+		"group":"1"
 	},
 	{
 		"id":"2",
 		"direction":"vertical",
-		"color":"#40d47e"
+		"color":"#40d47e",
+		"group":"2"
 	},
 	{
 		"id":"3",
 		"direction":"horizontal",
-		"color":"#ff8c81"
+		"color":"#ff8c81",
+		"group":"2"
 	},
 	{
 		"id":"4",
 		"direction":"vertical",
-		"color":"#3498db"
+		"color":"#3498db",
+		"group":"2"
 	},
 	{
 		"id":"5",
 		"direction":"vertical",
-		"color":"#34495e"
+		"color":"#34495e",
+		"group":"3"
+	},
+	{
+		"id":"6",
+		"direction":"vertical",
+		"color":"#34495e",
+		"group":"4"
 	}
 ]

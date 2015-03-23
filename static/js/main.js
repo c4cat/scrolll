@@ -4,9 +4,7 @@
 // global var and func
 // ver 0.1
 
-var startPos,           // 开始触摸点(X/Y坐标)
-    endPos,             // 结束触摸点(X/Y坐标)
-    stage,              // 用于标识 onStart/onMove/onEnd 流程的第几阶段，解决 onEnd 重复调用
+var stage,              // 用于标识 onStart/onMove/onEnd 流程的第几阶段，解决 onEnd 重复调用
     offset,             // 偏移距离
     direction = 'stay',			// 翻页方向
 
@@ -17,14 +15,7 @@ var startPos,           // 开始触摸点(X/Y坐标)
 
     $pages = $('#container'),             // page 外部 wrapper
     $pageArr,           // page 列表
-    $animateDom,		// 所有设置 [data-animate] 的动画元素
-
-    options,            // 最终配置项
-
-    touchDown = false,  // 手指已按下 (取消触摸移动时 transition 过渡)
-    movePrevent = true; // 阻止滑动 (动画过程中手指按下不可阻止)
-	
-
+    $animateDom;		// 所有设置 [data-animate] 的动画元素
 
 
 
@@ -35,13 +26,14 @@ var startPos,           // 开始触摸点(X/Y坐标)
 // the default options
 // ver 0.1
 
-options = {
+var options = {
 	direction: 'vertical',
 	swipeAnim: 'cover',   // 滚动动画，"default/cover"
 	arrow: false,			// 箭头
 	loading: false,        	// loading
     indicator: false,       		//
-    drag : true
+    drag : true,
+    onchange : function(){}
 }
 // MRC
 // page.js
@@ -50,97 +42,101 @@ options = {
 // ver 0.1
 
 var Page = Backbone.Model.extend({
-	defaults:{
-		width:pageWidth,
-		height:pageHeight,
+	defaults:function(){
+        return{
+            startPos:'',
+            endPos:'',
+            VHDirection:'',
+            direction:'stay',
+    		width:pageWidth,
+    		height:pageHeight,
+            touchDown:false,
+            movePrevent:true,
+            test:'123'
+        }
 	}
 });
 
 var Pages = Backbone.Collection.extend({
 	model:Page,
-	url:'./json/page.json'
+	url:'./json/page.json',
+    next:function(){
+
+    },
+    prev:function(){
+
+    },
+    goto:function (argument) {
+
+    },
+    comparator: 'id'
+
 });
 
 var PageView = Backbone.View.extend({
-	el:"#container",
-	model:Page,
-	template: _.template($("#page-template").html()),
-	// template: _.template("   <div></div> "),
-	initialize:function(){
-		var t = this;	
-			t.pages = new Pages(),
+    tagName:  "section",
+    template: _.template($("#page-template").html()),
+    events:{
+        'touchstart':'onStart',
+        'touchmove':'onMove',
+        'touchend':'onEnd',
+        'webkitAnimationEnd':'afterAnimate',
+        'webkitTransitionEnd':'afterAnimate'
+    },
+    initialize:function() {
+        // console.log(this.model.get('test'));
 
-		t.pages.fetch({
-			success:function(req,res){
-				req.each(function(obj){
-					t.render(obj.toJSON());
-				});
-			},
-			error:function(err){
-				console.log("Get Page JSON Error!!!");
-			}
-		});
-
-		$pages.addClass(options.direction).addClass(options.swipeAnim);
-		
-		if (options.loading) {
-			// $('.wrapper').append('<div class="parallax-loading"><i class="ui-loading ui-loading-white"></i></div>');
-        } else {
-        	// 允许触摸滑动
-            movePrevent = false;
-        }
-	},
-	events:{
-		'touchstart':'onStart',
-		'touchmove':'onMove',
-		'touchend':'onEnd',
-		'webkitAnimationEnd':'',
-		'webkitTransitionEnd':'afterAnimate'
-	},
-	render:function(obj){
-		$(this.el).append(this.template(obj));
-	},
-	onStart:function(ee){
-        if (movePrevent === true) {
+    },
+    render:function(){
+        this.$el.html(this.template(this.model.toJSON()));
+        return this;
+    },
+    onStart:function(ee){
+        if (this.model.get('movePrevent') === true) {
             event.preventDefault();
             return false;
         }
-       	var e = ee.changedTouches[0];
-		this.target = $(e.target);
-		options.direction = this.target.attr("data-direction");
+        var e = ee.changedTouches[0];
+
+        this.model.get('direction') = this.target.attr("data-direction");
+
         options.direction === 'horizontal' ? startPos = e.pageX : startPos = e.pageY;
+        //startPos.x = e.pageX;
+        //startPos.y = e.pageY;
+
         touchDown = true;
-        $pageArr = $('.page');
         pageCount = $pageArr.length;
 
-        if (options.swipeAnim === 'default') {
-            $pages.addClass('drag');    // 阻止过渡效果
+        // if (options.swipeAnim === 'default') {
+        //     $pages.addClass('drag');    // 阻止过渡效果
 
-            offset = $pages.css("-webkit-transform")
-                        .replace("matrix(", "")
-                        .replace(")", "")
-                        .split(",");
+        //     offset = $pages.css("-webkit-transform")
+        //                 .replace("matrix(", "")
+        //                 .replace(")", "")
+        //                 .split(",");
 
-            options.direction === 'horizontal' ?
-                offset = parseInt(offset[4]) :
-                offset = parseInt(offset[5]);
-        }
+        //     options.direction === 'horizontal' ?
+        //         offset = parseInt(offset[4]) :
+        //         offset = parseInt(offset[5]);
+        // }
+
         if ((options.swipeAnim === 'cover' && options.drag)) {
             $pageArr.addClass('drag');
         }
 
         stage = 1;
-        console.log(1);
-	},
-	onMove:function(ee){
-		var e = ee.changedTouches[0];
+    },
+    onMove:function(ee){
+        var e = ee.changedTouches[0];
 
-        if(movePrevent === true || touchDown === false){
+        if(this.model.get('movePrevent') === true || this.model.get('touchDown') === false){
             event.preventDefault();
             return false;
         }
         event.preventDefault();
         options.direction === 'horizontal' ? endPos = e.pageX : endPos = e.pageY;
+        // endPos.x = e.pageX;
+        // endPos.y = e.pageY;
 
         this.addDirecClass();    // 添加方向类
 
@@ -148,10 +144,9 @@ var PageView = Backbone.View.extend({
             this.dragToMove();
         }
         stage = 2;
-        console.log(2);
     },
     onEnd:function(ee){
-		var e = ee.changedTouches[0];
+        var e = ee.changedTouches[0];
 
         if (movePrevent === true || stage !== 2){
             // event.preventDefault();
@@ -159,6 +154,9 @@ var PageView = Backbone.View.extend({
         } else {
             touchDown = false;
             options.direction === 'horizontal' ? endPos = e.pageX : endPos = e.pageY;
+
+            // endPos.x = e.pageX;
+            // endPos.y = e.pageY;
 
             if (options.swipeAnim === 'default' && !this.isHeadOrTail()) {
                 $pages.removeClass('drag');
@@ -204,7 +202,7 @@ var PageView = Backbone.View.extend({
                 }
             }
             // dot
-			// if (options.indicator) {
+            // if (options.indicator) {
    //              $($('.parallax-h-indicator ul li, .parallax-v-indicator ul li').removeClass('current').get(curPage)).addClass('current');
    //          }
             stage = 3;
@@ -224,8 +222,6 @@ var PageView = Backbone.View.extend({
                 $nextPage = $($pageArr[curPage+1]);
 
             $($pageArr).css({'z-index': 0});
-
-            console.log($nextPage);
 
             if (options.direction === 'horizontal' && endPos >= startPos) {
                 $prevPage.css({
@@ -258,9 +254,7 @@ var PageView = Backbone.View.extend({
         }
     },
     animatePage:function(newPage, action) {
-
         curPage = newPage;
-
         if (options.swipeAnim === 'default') {
 
             var newOffset = 0;
@@ -341,24 +335,136 @@ var PageView = Backbone.View.extend({
         }
         return false;
     },
+    h_or_v:function(){
+        var offsetX = Math.abs(endPos.x-startPos.x),
+            offsetY = Math.abs(endPos.y-endPos.y);
+
+        //this.target = "";
+            
+    },
     afterAnimate:function(){
-    	if (direction !== 'stay') {
-				setTimeout(function() {
-	                $(".back").hide().removeClass("back");
-	                $(".front").show().removeClass("front");
-	                $pages.removeClass('forward backward animate');
-	            }, 10);
-	
-	            $($pageArr.removeClass('current').get(curPage)).addClass('current');
-	            options.onchange(curPage, $pageArr[curPage], direction);  // 执行回调函数
-	            animShow();
-		}
-    },	
+        if (direction !== 'stay') {
+                setTimeout(function() {
+                    $(".back").hide().removeClass("back");
+                    $(".front").show().removeClass("front");
+                    $pages.removeClass('forward backward animate');
+                }, 10);
+    
+                $($pageArr.removeClass('current').get(curPage)).addClass('current');
+                options.onchange(curPage, $pageArr[curPage], direction);  // 执行回调函数
+                //this.animShow();
+        }
+    },  
+    animShow:function(){
+        
+        $animateDom.css({
+            '-webkit-animation': 'none',
+            'display': 'none'   // 解决部分 Android 机型 DOM 不自动重绘的 bug
+            });
+
+        
+        $('.current [data-animation]').each(function(index, element){
+            var $element    = $(element),
+                $animation  = $element.attr('data-animation'),
+                $duration   = $element.attr('data-duration') || 500,
+                $timfunc    = $element.attr('data-timing-function') || 'ease',
+                $delay      = $element.attr('data-delay') ?  $element.attr('data-delay') : 0;
+
+
+            if ($animation === 'followSlide') {
+                
+                if (options.direction === 'horizontal' && direction === 'forward') {
+                    $animation = 'followSlideToLeft';
+                }
+                else if (options.direction === 'horizontal' && direction === 'backward') {
+                    $animation = 'followSlideToRight';
+                }
+                else if (options.direction === 'vertical' && direction === 'forward') {
+                    $animation = 'followSlideToTop';
+                }
+                else if (options.direction === 'vertical' && direction === 'backward') {
+                    $animation = 'followSlideToBottom';
+                }
+                
+            }
+
+            $element.css({
+//              '-webkit-animation': $animation +' '+ $duration + 'ms ' + $timfunc + ' '+ $delay + 'ms both',
+                
+                'display': 'block',
+                
+                // 为了兼容不支持贝塞尔曲线的动画，需要拆开写
+                // 严格模式下不允许出现两个同名属性，所以不得已去掉 'use strict'
+                '-webkit-animation-name': $animation,
+                '-webkit-animation-duration': $duration + 'ms',
+                '-webkit-animation-timing-function': 'ease',
+                '-webkit-animation-timing-function': $timfunc,
+                '-webkit-animation-delay': $delay + 'ms',
+                '-webkit-animation-fill-mode': 'both'
+            })
+        });
+    }
+});
+
+var AppView = Backbone.View.extend({
+	el:"#container",
+	initialize:function(){
+		var t = this;	
+			t.pages = new Pages(),
+
+		t.pages.fetch({
+			success:function(req,res){
+				req.each(function(obj){
+					// t.render(obj.toJSON());
+                    t.add(obj);
+				});
+			},
+			error:function(err){
+				console.log("Get Page JSON Error!!!");
+			}
+		});
+	},
+    init:function(){
+        // $pages.addClass(options.direction).addClass(options.swipeAnim);
+        // $pageArr = $('.page');
+
+        // $pageArr.css({                          // 初始化 page 宽高
+        //     'width': pageWidth + 'px',
+        //     'height': pageHeight + 'px'
+        // });
+
+        // options.direction === 'horizontal' ?     // 设置 wrapper 宽高
+        //     $pages.css('width', pageWidth * $pageArr.length) :
+        //     $pages.css('height', pageHeight * $pageArr.length);
+
+
+        // if (options.swipeAnim === 'cover') {    // 重置 page 的宽高(因为这两个效果与 default 实现方式截然不同)
+        //     $pages.css({
+        //         'width': pageWidth,
+        //         'height': pageHeight
+        //     });
+        //     $pageArr[0].style.display = 'block'; // 不能通过 css 来定义，不然在 Android 和 iOS 下会有 bug
+        // }
+
+        // if (options.loading) {
+        //     // $('.wrapper').append('<div class="parallax-loading"><i class="ui-loading ui-loading-white"></i></div>');
+        // } else {
+        //     // 允许触摸滑动
+        //     movePrevent = false;
+        // }
+    },
+	render:function(){
+		
+	},
+    add:function(page){
+        var view = new PageView({model:page});
+        $(this.el).append(view.render().el);
+    },
 	test:function(){
 		alert('this is a test');
 	}
 });
 
-var app = new PageView();
+var app = new AppView();
 
 

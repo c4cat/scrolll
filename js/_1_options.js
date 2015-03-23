@@ -4,11 +4,12 @@
 // the default options
 // ver 0.1
 
-options = {
+var options = {
 	direction: 'vertical',
 	swipeAnim: 'cover',   // 滚动动画，"default/cover"
 	arrow: false,			// 箭头
 	loading: false,        	// loading
     indicator: false,       		//
-    drag : true
+    drag : true,
+    onchange : function(){}
 }
