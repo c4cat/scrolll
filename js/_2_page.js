@@ -14,7 +14,7 @@ var Page = Backbone.Model.extend({
     		width:pageWidth,
     		height:pageHeight,
             touchDown:false,
-            movePrevent:true,
+            movePrevent:false,
             test:'123'
         }
 	}
@@ -36,8 +36,9 @@ var Pages = Backbone.Collection.extend({
 
 });
 
+var pages = new Pages();
+
 var PageView = Backbone.View.extend({
-    tagName:  "section",
     template: _.template($("#page-template").html()),
     events:{
         'touchstart':'onStart',
@@ -51,29 +52,27 @@ var PageView = Backbone.View.extend({
 
     },
     render:function(){
-        this.$el.html(this.template(this.model.toJSON()));
+    	// this.$el.html(this.template(this.model.toJSON())); //replace because we don't need the tag swap
+        this.setElement(this.template(this.model.toJSON()));
         return this;
     },
     onStart:function(ee){
-        if (this.model.get('movePrevent') === true) {
+        if (movePrevent === true) {
             event.preventDefault();
             return false;
         }
         var e = ee.changedTouches[0];
-
-        this.model.get('direction') = this.target.attr("data-direction");
 
         options.direction === 'horizontal' ? startPos = e.pageX : startPos = e.pageY;
         //startPos.x = e.pageX;
         //startPos.y = e.pageY;
 
         touchDown = true;
-        pageCount = $pageArr.length;
 
         // if (options.swipeAnim === 'default') {
-        //     $pages.addClass('drag');    // 阻止过渡效果
+        //     $container.addClass('drag');    // 阻止过渡效果
 
-        //     offset = $pages.css("-webkit-transform")
+        //     offset = $container.css("-webkit-transform")
         //                 .replace("matrix(", "")
         //                 .replace(")", "")
         //                 .split(",");
@@ -88,11 +87,12 @@ var PageView = Backbone.View.extend({
         }
 
         stage = 1;
+        console.log(stage);
     },
     onMove:function(ee){
         var e = ee.changedTouches[0];
 
-        if(this.model.get('movePrevent') === true || this.model.get('touchDown') === false){
+        if(movePrevent === true || touchDown === false){
             event.preventDefault();
             return false;
         }
@@ -122,7 +122,7 @@ var PageView = Backbone.View.extend({
             // endPos.y = e.pageY;
 
             if (options.swipeAnim === 'default' && !this.isHeadOrTail()) {
-                $pages.removeClass('drag');
+                $container.removeClass('drag');
 
                 if (Math.abs(endPos-startPos) <= 50) {
                     this.animatePage(curPage);
@@ -176,8 +176,8 @@ var PageView = Backbone.View.extend({
         if (options.swipeAnim === 'default') {
             var temp = offset + endPos - startPos;
             options.direction === 'horizontal' ?
-                $pages.css("-webkit-transform", "matrix(1, 0, 0, 1, " + temp + ", 0)") :
-                $pages.css("-webkit-transform", "matrix(1, 0, 0, 1, 0, " + temp + ")");
+                $container.css("-webkit-transform", "matrix(1, 0, 0, 1, " + temp + ", 0)") :
+                $container.css("-webkit-transform", "matrix(1, 0, 0, 1, 0, " + temp + ")");
         }
         else if (options.swipeAnim === 'cover') {
             var temp      =  endPos - startPos,
@@ -226,8 +226,8 @@ var PageView = Backbone.View.extend({
                 newOffset = newPage * (-pageHeight);
 
             options.direction === 'horizontal' ?
-                $pages.css({'-webkit-transform': 'matrix(1, 0, 0, 1, ' + newOffset + ', 0)'}) :
-                $pages.css({'-webkit-transform': 'matrix(1, 0, 0, 1, 0, ' + newOffset + ')'});
+                $container.css({'-webkit-transform': 'matrix(1, 0, 0, 1, ' + newOffset + ', 0)'}) :
+                $container.css({'-webkit-transform': 'matrix(1, 0, 0, 1, 0, ' + newOffset + ')'});
 
         }
         else if (options.swipeAnim === 'cover') {
@@ -254,12 +254,12 @@ var PageView = Backbone.View.extend({
                 $pageArr[curPage].style.webkitTransform = 'translate(0, 0)';
             }
             else if (action === 'forward' && !options.drag) {
-                $pages.addClass('animate');
+                $container.addClass('animate');
                 $($pageArr[curPage-1]).addClass('back');
                 $($pageArr[curPage]).addClass('front').show();
             }
             else if (action === 'backward' && !options.drag) {
-                $pages.addClass('animate');
+                $container.addClass('animate');
                 $($pageArr[curPage+1]).addClass('back');
                 $($pageArr[curPage]).addClass('front').show();
             }
@@ -274,19 +274,21 @@ var PageView = Backbone.View.extend({
     addDirecClass:function(){
         if(options.direction === 'horizontal'){
             if (endPos >= startPos) {
-                $pages.removeClass('forward').addClass('backward');
+                $container.removeClass('forward').addClass('backward');
             } else if (endPos < startPos) {
-                $pages.removeClass('backward').addClass('forward');
+                $container.removeClass('backward').addClass('forward');
             }
         } else {
             if (endPos >= startPos) {
-                $pages.removeClass('forward').addClass('backward');
+                $container.removeClass('forward').addClass('backward');
             } else if (endPos < startPos) {
-                $pages.removeClass('backward').addClass('forward');
+                $container.removeClass('backward').addClass('forward');
             }
         }
     },
     isHeadOrTail:function(){
+    	var pageCount = pages.length;
+
         if (options.direction === 'horizontal') {
             if ((endPos >= startPos && curPage === 0) ||
                 (endPos <= startPos && curPage === pageCount-1)) {
@@ -310,7 +312,7 @@ var PageView = Backbone.View.extend({
                 setTimeout(function() {
                     $(".back").hide().removeClass("back");
                     $(".front").show().removeClass("front");
-                    $pages.removeClass('forward backward animate');
+                    $container.removeClass('forward backward animate');
                 }, 10);
     
                 $($pageArr.removeClass('current').get(curPage)).addClass('current');
@@ -373,14 +375,14 @@ var AppView = Backbone.View.extend({
 	el:"#container",
 	initialize:function(){
 		var t = this;	
-			t.pages = new Pages(),
-
-		t.pages.fetch({
+		
+		pages.fetch({
 			success:function(req,res){
 				req.each(function(obj){
 					// t.render(obj.toJSON());
                     t.add(obj);
 				});
+                t.init();
 			},
 			error:function(err){
 				console.log("Get Page JSON Error!!!");
@@ -388,33 +390,28 @@ var AppView = Backbone.View.extend({
 		});
 	},
     init:function(){
-        // $pages.addClass(options.direction).addClass(options.swipeAnim);
-        // $pageArr = $('.page');
+        $container.addClass(options.direction).addClass(options.swipeAnim);
+        $pageArr = $container.find('.page');
 
-        // $pageArr.css({                          // 初始化 page 宽高
-        //     'width': pageWidth + 'px',
-        //     'height': pageHeight + 'px'
-        // });
-
-        // options.direction === 'horizontal' ?     // 设置 wrapper 宽高
-        //     $pages.css('width', pageWidth * $pageArr.length) :
-        //     $pages.css('height', pageHeight * $pageArr.length);
+        options.direction === 'horizontal' ?     // 设置 wrapper 宽高
+            $container.css('width', pageWidth * pages.length) :
+            $container.css('height', pageHeight * pages.length);
 
 
-        // if (options.swipeAnim === 'cover') {    // 重置 page 的宽高(因为这两个效果与 default 实现方式截然不同)
-        //     $pages.css({
-        //         'width': pageWidth,
-        //         'height': pageHeight
-        //     });
-        //     $pageArr[0].style.display = 'block'; // 不能通过 css 来定义，不然在 Android 和 iOS 下会有 bug
-        // }
+        if (options.swipeAnim === 'cover') {    // 重置 page 的宽高(因为这两个效果与 default 实现方式截然不同)
+            $container.css({
+                'width': pageWidth,
+                'height': pageHeight
+            });
+            $pageArr[0].style.display = 'block'; // 不能通过 css 来定义，不然在 Android 和 iOS 下会有 bug
+        }
 
-        // if (options.loading) {
-        //     // $('.wrapper').append('<div class="parallax-loading"><i class="ui-loading ui-loading-white"></i></div>');
-        // } else {
-        //     // 允许触摸滑动
-        //     movePrevent = false;
-        // }
+        if (options.loading) {
+            // $('.wrapper').append('<div class="parallax-loading"><i class="ui-loading ui-loading-white"></i></div>');
+        } else {
+            // 允许触摸滑动
+            movePrevent = false;
+        }
     },
 	render:function(){
 		

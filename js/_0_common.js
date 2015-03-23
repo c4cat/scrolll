@@ -4,7 +4,9 @@
 // global var and func
 // ver 0.1
 
-var stage,              // 用于标识 onStart/onMove/onEnd 流程的第几阶段，解决 onEnd 重复调用
+var startPos,
+    endPos,
+    stage,              // 用于标识 onStart/onMove/onEnd 流程的第几阶段，解决 onEnd 重复调用
     offset,             // 偏移距离
     direction = 'stay',			// 翻页方向
 
@@ -13,9 +15,13 @@ var stage,              // 用于标识 onStart/onMove/onEnd 流程的第几阶�
     pageWidth = document.documentElement.clientWidth,          // page 宽度
     pageHeight = document.documentElement.clientHeight,         // page 高度
 
-    $pages = $('#container'),             // page 外部 wrapper
+    $container = $('#container'),             // page 外部 wrapper
     $pageArr,           // page 列表
-    $animateDom;		// 所有设置 [data-animate] 的动画元素
+    $animateDom,		// 所有设置 [data-animate] 的动画元素
+    
+    movePrevent = false,
+    touchDown = false;
+
 
 
 

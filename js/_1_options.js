@@ -5,7 +5,7 @@
 // ver 0.1
 
 var options = {
-	direction: 'vertical',
+	direction: 'vertical', // the default direction
 	swipeAnim: 'cover',   // 滚动动画，"default/cover"
 	arrow: false,			// 箭头
 	loading: false,        	// loading
