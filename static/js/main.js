@@ -130,7 +130,6 @@ var PageView = Backbone.View.extend({
         }
 
         stage = 1;
-        console.log(stage);
     },
     onMove:function(ee){
         var e = ee.changedTouches[0];
