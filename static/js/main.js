@@ -70,11 +70,11 @@ var Page = Backbone.Model.extend({
 var Pages = Backbone.Collection.extend({
 	model:Page,
 	url:'./json/page.json',
-    next:function(){
+    next:function(cur){
 
     },
-    prev:function(){
-
+    prev:function(cur){
+    	return pages.length;
     },
     goto:function (argument) {
 
@@ -219,7 +219,12 @@ var PageView = Backbone.View.extend({
         }
     },
     dragToMove:function() {
-        console.log(pages.next());
+	    var	current = pages.indexOf(this),
+	    	next = pages.at(current+1),
+	    	prev = pages.at(current-1);
+
+	    	console.log(this);
+	    	console.log(next.setElement(next));
 
         if (options.swipeAnim === 'default') {
             var temp = offset + this.model.get('endPos') - this.model.get('startPos');
