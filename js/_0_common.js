@@ -19,8 +19,7 @@ var startPos,
     $pageArr,           // page 列表
     $animateDom,		// 所有设置 [data-animate] 的动画元素
     
-    movePrevent = false,
-    touchDown = false;
+    movePrevent = false;
 
 
 

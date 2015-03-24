@@ -19,8 +19,7 @@ var startPos,
     $pageArr,           // page 列表
     $animateDom,		// 所有设置 [data-animate] 的动画元素
     
-    movePrevent = false,
-    touchDown = false;
+    movePrevent = false;
 
 
 
@@ -49,16 +48,21 @@ var options = {
 
 var Page = Backbone.Model.extend({
 	defaults:function(){
+        var demo = "456";
+
         return{
-            startPos:'',
-            endPos:'',
+            startPos:0,
+            endPos:0,
+            stage:0,
             VHDirection:'',
             direction:'stay',
     		width:pageWidth,
     		height:pageHeight,
             touchDown:false,
             movePrevent:false,
-            test:'123'
+            isCurrent:false,
+            test:'123',
+            demo:demo,
         }
 	}
 });
@@ -76,7 +80,6 @@ var Pages = Backbone.Collection.extend({
 
     },
     comparator: 'id'
-
 });
 
 var pages = new Pages();
@@ -92,7 +95,9 @@ var PageView = Backbone.View.extend({
     },
     initialize:function() {
         // console.log(this.model.get('test'));
-
+        this.demo = 'demo';
+        this.listenTo(this.model,'change:startPos',this.test);
+        this.listenTo(this.model,'change:endPos',this.test);
     },
     render:function(){
     	// this.$el.html(this.template(this.model.toJSON())); //replace because we don't need the tag swap
@@ -100,17 +105,18 @@ var PageView = Backbone.View.extend({
         return this;
     },
     onStart:function(ee){
+        console.log(this.model.get('demo'));
+
         if (movePrevent === true) {
             event.preventDefault();
             return false;
         }
         var e = ee.changedTouches[0];
 
-        options.direction === 'horizontal' ? startPos = e.pageX : startPos = e.pageY;
-        //startPos.x = e.pageX;
-        //startPos.y = e.pageY;
+        this.direction = this.model.get('direction') ? this.model.get('direction') : options.direction;
+        this.direction === 'horizontal' ? this.model.set('startPos',e.pageX) : this.model.set('startPos',e.pageY);
 
-        touchDown = true;
+        this.model.set('touchDown',true);
 
         // if (options.swipeAnim === 'default') {
         //     $container.addClass('drag');    // 阻止过渡效果
@@ -126,130 +132,130 @@ var PageView = Backbone.View.extend({
         // }
 
         if ((options.swipeAnim === 'cover' && options.drag)) {
-            $pageArr.addClass('drag');
+            this.$el.addClass('drag');
         }
 
-        stage = 1;
+        this.model.set('stage',1);
     },
     onMove:function(ee){
         var e = ee.changedTouches[0];
 
-        if(movePrevent === true || touchDown === false){
+        if(movePrevent === true || this.model.get('touchDown') === false){
             event.preventDefault();
             return false;
         }
         event.preventDefault();
-        options.direction === 'horizontal' ? endPos = e.pageX : endPos = e.pageY;
-        // endPos.x = e.pageX;
-        // endPos.y = e.pageY;
 
+        this.direction === 'horizontal' ? this.model.set('endPos',e.pageX) : this.model.set('endPos',e.pageY);
         this.addDirecClass();    // 添加方向类
 
         if (options.drag && !this.isHeadOrTail()) { // 拖拽时调用
             this.dragToMove();
         }
-        stage = 2;
+        this.model.set('stage',2);
     },
     onEnd:function(ee){
         var e = ee.changedTouches[0];
 
-        if (movePrevent === true || stage !== 2){
+        if (movePrevent === true || this.model.get('stage') !== 2){
             // event.preventDefault();
             // return false;
         } else {
-            touchDown = false;
-            options.direction === 'horizontal' ? endPos = e.pageX : endPos = e.pageY;
+            this.model.set('touchDown',false);
+            this.direction === 'horizontal' ? this.model.set('endPos',e.pageX) : this.model.set('endPos',e.pageY);
 
-            // endPos.x = e.pageX;
-            // endPos.y = e.pageY;
+            _startPos = this.model.get('startPos');
+            _endPos = this.model.get('endPos');
 
-            if (options.swipeAnim === 'default' && !this.isHeadOrTail()) {
-                $container.removeClass('drag');
+            // if (options.swipeAnim === 'default' && !this.isHeadOrTail()) {
+            //     $container.removeClass('drag');
 
-                if (Math.abs(endPos-startPos) <= 50) {
-                    this.animatePage(curPage);
-                    direction = 'stay';
-                }
-                else if (endPos >= startPos) {
-                    this.animatePage(curPage-1);
-                    direction = 'backward';
-                }
-                else if (endPos < startPos) {
-                    this.animatePage(curPage+1);
-                    direction = 'forward';
-                }
-            }
-            else if (options.swipeAnim === 'cover' && !this.isHeadOrTail()){
+            //     if (Math.abs(_endPos-_startPos) <= 50) {
+            //         this.animatePage(curPage);
+            //         direction = 'stay';
+            //     }
+            //     else if (_endPos >= _startPos) {
+            //         this.animatePage(curPage-1);
+            //         direction = 'backward';
+            //     }
+            //     else if (_endPos < _startPos) {
+            //         this.animatePage(curPage+1);
+            //         direction = 'forward';
+            //     }
+            // }
+            // else
+            if (options.swipeAnim === 'cover' && !this.isHeadOrTail()){
 
-                if (Math.abs(endPos-startPos) <= 50 && endPos >= startPos && options.drag) {
+                if (Math.abs(_endPos-_startPos) <= 50 && _endPos >= _startPos && options.drag) {
                     this.animatePage(curPage, 'keep-backward');
-                    direction = 'stay';
+                    this.model.set('direction','stay');
                 }
-                else if (Math.abs(endPos-startPos) <= 50 && endPos < startPos && options.drag) {
+                else if (Math.abs(_endPos-_startPos) <= 50 && _endPos < _startPos && options.drag) {
                     this.animatePage(curPage, 'keep-forward');
-                    direction = 'stay';
+                    this.model.set('direction','stay');
                 }
-                else if (Math.abs(endPos-startPos) > 50 && endPos >= startPos && options.drag) {
+                else if (Math.abs(_endPos-_startPos) > 50 && _endPos >= _startPos && options.drag) {
                     this.animatePage(curPage-1, 'backward');
-                    direction = 'backward';
+                    this.model.set('direction','backward');
                 }
-                else if (Math.abs(endPos-startPos) > 50 && endPos < startPos && options.drag) {
+                else if (Math.abs(_endPos-_startPos) > 50 && _endPos < _startPos && options.drag) {
                     this.animatePage(curPage+1, 'forward')
-                    direction = 'forward';
+                    this.model.set('direction','forward');
                 }
-                else if (Math.abs(endPos-startPos) > 50 && endPos >= startPos && !options.drag) {
+                else if (Math.abs(_endPos-_startPos) > 50 && _endPos >= _startPos && !options.drag) {
                     this.animatePage(curPage-1, 'backward');
-                    direction = 'backward';
+                    this.model.set('direction','backward');
                 }
-                else if (Math.abs(endPos-startPos) > 50 && endPos < startPos && !options.drag) {
+                else if (Math.abs(_endPos-_startPos) > 50 && _endPos < _startPos && !options.drag) {
                     this.animatePage(curPage+1, 'forward')
-                    direction = 'forward';
+                    this.model.set('direction','forward');
                 }
             }
             // dot
             // if (options.indicator) {
    //              $($('.parallax-h-indicator ul li, .parallax-v-indicator ul li').removeClass('current').get(curPage)).addClass('current');
    //          }
-            stage = 3;
+            this.model.set('stage',3);
         }
-        
     },
     dragToMove:function() {
+        console.log(pages.next());
+
         if (options.swipeAnim === 'default') {
-            var temp = offset + endPos - startPos;
-            options.direction === 'horizontal' ?
+            var temp = offset + this.model.get('endPos') - this.model.get('startPos');
+            this.direction === 'horizontal' ?
                 $container.css("-webkit-transform", "matrix(1, 0, 0, 1, " + temp + ", 0)") :
                 $container.css("-webkit-transform", "matrix(1, 0, 0, 1, 0, " + temp + ")");
         }
         else if (options.swipeAnim === 'cover') {
-            var temp      =  endPos - startPos,
+            var temp = this.model.get('endPos') - this.model.get('startPos');
                 $prevPage = $($pageArr[curPage-1]),
                 $nextPage = $($pageArr[curPage+1]);
 
             $($pageArr).css({'z-index': 0});
 
-            if (options.direction === 'horizontal' && endPos >= startPos) {
+            if (this.direction === 'horizontal' && endPos >= startPos) {
                 $prevPage.css({
                     'z-index': 2,
                     'display': 'block',
                     '-webkit-transform': 'translateX('+(temp-pageWidth) +'px)'
                 })
             }
-            else if (options.direction === 'horizontal' && endPos < startPos) {
+            else if (this.direction === 'horizontal' && endPos < startPos) {
                 $nextPage.css({
                     'z-index': 2,
                     'display': 'block',
                     '-webkit-transform': 'translateX('+(pageWidth+temp) +'px)'
                 })
             }
-            else if (options.direction === 'vertical' && endPos >= startPos) {
+            else if (this.direction === 'vertical' && endPos >= startPos) {
                 $prevPage.css({
                     'z-index': 2,
                     'display': 'block',
                     '-webkit-transform': 'translateY('+ (temp-pageHeight) +'px)'
                 })
             }
-            else if (options.direction === 'vertical' && endPos < startPos) {
+            else if (this.direction === 'vertical' && endPos < startPos) {
                 $nextPage.css({
                     'z-index': 2,
                     'display': 'block',
@@ -410,8 +416,18 @@ var PageView = Backbone.View.extend({
                 '-webkit-animation-fill-mode': 'both'
             })
         });
+    },
+    test:function(){
+        console.log('this is a test function!');
     }
 });
+
+
+// MRC
+// AppView.js
+// 2015-3-21 16:29:50
+// for backbone page model and view
+// ver 0.1
 
 var AppView = Backbone.View.extend({
 	el:"#container",
@@ -454,6 +470,8 @@ var AppView = Backbone.View.extend({
             // 允许触摸滑动
             movePrevent = false;
         }
+        // this.listenTo(pages, 'change', this.test);
+        
     },
 	render:function(){
 		
@@ -468,5 +486,3 @@ var AppView = Backbone.View.extend({
 });
 
 var app = new AppView();
-
-

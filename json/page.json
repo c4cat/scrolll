@@ -1,13 +1,13 @@
 [
 	{
 		"id":"1",
-		"direction":"horizontal",
+		"direction":"",
 		"color":"#3498db",
 		"group":"1"
 	},
 	{
 		"id":"2",
-		"direction":"vertical",
+		"direction":"horizontal",
 		"color":"#40d47e",
 		"group":"2"
 	},
@@ -19,19 +19,19 @@
 	},
 	{
 		"id":"4",
-		"direction":"vertical",
+		"direction":"horizontal",
 		"color":"#3498db",
 		"group":"2"
 	},
 	{
 		"id":"5",
-		"direction":"vertical",
+		"direction":"",
 		"color":"#34495e",
 		"group":"3"
 	},
 	{
 		"id":"6",
-		"direction":"vertical",
+		"direction":"",
 		"color":"#34495e",
 		"group":"4"
 	}
