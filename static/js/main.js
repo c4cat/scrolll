@@ -105,8 +105,6 @@ var PageView = Backbone.View.extend({
         return this;
     },
     onStart:function(ee){
-        console.log(this.model.get('demo'));
-
         if (movePrevent === true) {
             event.preventDefault();
             return false;
@@ -200,7 +198,7 @@ var PageView = Backbone.View.extend({
                     this.model.set('direction','backward');
                 }
                 else if (Math.abs(_endPos-_startPos) > 50 && _endPos < _startPos && options.drag) {
-                    this.animatePage(this.curPage+1, 'forward')
+                    this.animatePage(this.nextPage(), 'forward')
                     this.model.set('direction','forward');
                 }
                 else if (Math.abs(_endPos-_startPos) > 50 && _endPos >= _startPos && !options.drag) {
@@ -208,7 +206,7 @@ var PageView = Backbone.View.extend({
                     this.model.set('direction','backward');
                 }
                 else if (Math.abs(_endPos-_startPos) > 50 && _endPos < _startPos && !options.drag) {
-                    this.animatePage(this.curPage+1, 'forward')
+                    this.animatePage(this.nextPage(), 'forward')
                     this.model.set('direction','forward');
                 }
             }
@@ -220,12 +218,8 @@ var PageView = Backbone.View.extend({
         }
     },
     dragToMove:function() {
-	    this.nextPage = $(this.$el[0].nextElementSibling),
-	    this.prevPage = $(this.$el[0].prevElementSibling);
-
         var endPos = this.model.get('endPos'),
-            startPos = this.model.get('startPos')
-
+            startPos = this.model.get('startPos');
 
         if (options.swipeAnim === 'default') {
             var temp = offset + endPos - startPos;
@@ -235,93 +229,140 @@ var PageView = Backbone.View.extend({
         }
         else if (options.swipeAnim === 'cover') {
             var temp = endPos - startPos;
+            var view,cssVal;
 
             //need to correct
             $('.page').css({'z-index': 0});
 
             if (this.direction === 'horizontal' && endPos >= startPos) {
-                this.prevPage.css({
+                view = 'prevPage';
+                cssVal = {
                     'z-index': 2,
                     'display': 'block',
                     '-webkit-transform': 'translateX('+(temp-pageWidth) +'px)'
-                })
+                };
             }
             else if (this.direction === 'horizontal' && endPos < startPos) {
-                this.nextPage.css({
+                view = 'nextPage';
+                cssVal = {
                     'z-index': 2,
                     'display': 'block',
                     '-webkit-transform': 'translateX('+(pageWidth+temp) +'px)'
-                })
+                };
             }
             else if (this.direction === 'vertical' && endPos >= startPos) {
-                this.prevPage.css({
+                view = 'prevPage';
+                cssVal = {
                     'z-index': 2,
                     'display': 'block',
                     '-webkit-transform': 'translateY('+ (temp-pageHeight) +'px)'
-                })
+                };
             }
             else if (this.direction === 'vertical' && endPos < startPos) {
-                this.nextPage.css({
+                view = 'nextPage';
+                cssVal = {
                     'z-index': 2,
                     'display': 'block',
                     '-webkit-transform': 'translateY('+ (pageHeight+temp) +'px)'
-                })
+                };
             }
+            this.setCss(view,cssVal)
         }
     },
-    animatePage:function(newPage, action) {
-        this.curPage = newPage;
-        this.nextPage = $(this.$el[0].nextElementSibling),
-        this.prevPage = $(this.$el[0].prevElementSibling);
-        
-        if (options.swipeAnim === 'default') {
-
-            var newOffset = 0;
-            this.direction === 'horizontal' ?
-                newOffset = newPage * (-pageWidth) :
-                newOffset = newPage * (-pageHeight);
-
-            this.direction === 'horizontal' ?
-                $container.css({'-webkit-transform': 'matrix(1, 0, 0, 1, ' + newOffset + ', 0)'}) :
-                $container.css({'-webkit-transform': 'matrix(1, 0, 0, 1, 0, ' + newOffset + ')'});
-
+    setCss:function(view,cssVal){
+        var dom = this.getDom(view);
+        $(dom).css(cssVal).addClass("heyJude");
+    },
+    setTheClass:function(view,className) {
+        var dom = this.getDom(view);
+        $(dom).addClass(className);
+    },
+    removeTheClass:function(view,className) {
+        var dom = this.getDom(view);
+        $(dom).addClass(className);
+    },
+    getDom:function(view){
+        var dom;
+        if(view === "nextPage"){
+            dom = this.nextPage();
+        }else if(view === "prevPage"){
+            dom = this.prevPage();
+        }else{
+            dom = $(this.$el[0])
         }
-        else if (options.swipeAnim === 'cover') {
+        return dom;
+    },
+    nextPage:function(){
+        return $(this.$el[0].nextElementSibling);
+    },
+    prevPage:function(){
+        return $(this.$el[0].prevElementSibling);
+    },
+    animatePage:function(newPage, action) {
+
+        var view,cssVal,className;
+        // if (options.swipeAnim === 'default') {
+
+        //     var newOffset = 0;
+        //     this.direction === 'horizontal' ?
+        //         newOffset = newPage * (-pageWidth) :
+        //         newOffset = newPage * (-pageHeight);
+
+        //     this.direction === 'horizontal' ?
+        //         $container.css({'-webkit-transform': 'matrix(1, 0, 0, 1, ' + newOffset + ', 0)'}) :
+        //         $container.css({'-webkit-transform': 'matrix(1, 0, 0, 1, 0, ' + newOffset + ')'});
+
+        // }
+        // else 
+        if (options.swipeAnim === 'cover') {
             if (action === 'keep-backward' && options.drag) {
                 $('.page').removeClass('drag');
+
                 this.direction === 'horizontal' ?
-                this.prevPage.css({'-webkit-transform': 'translateX(-100%)'}) :
-                this.prevPage.css({'-webkit-transform': 'translateY(-100%)'})
+                cssVal = {'-webkit-transform': 'translateX(-100%)'} :
+                cssVal = {'-webkit-transform': 'translateY(-100%)'};
+                view = 'prevPage';
             }
             else if (action === 'keep-forward' && options.drag) {
                 $('.page').removeClass('drag');
+
                 this.direction === 'horizontal' ?
-                this.nextPage.css({'-webkit-transform': 'translateX(100%)'}) :
-                this.nextPage.css({'-webkit-transform': 'translateY(100%)'})
+                cssVal = {'-webkit-transform': 'translateX(100%)'} :
+                cssVal = {'-webkit-transform': 'translateY(100%)'};
+                view = 'nextPage';
             }
             else if (action === 'forward' && options.drag) {
                 $('.page').removeClass('drag');
-                this.prevPage.addClass('back'); // 纯粹为了在动画结束后隐藏，不涉及 CSS 中定义的动画
-                console.log($(this.$el)[0]);
-                $(this.$el)[0].style.webkitTransform = 'translate(0, 0)';
-                console.log(this.prevPage);
+                
+                this.setTheClass('prevPage','back'); // 纯粹为了在动画结束后隐藏，不涉及 CSS 中定义的动画
+                cssVal = {'-webkit-transform': 'translate(0,0)'};
+                view = 'curPage';
             }
             else if (action === 'backward' && options.drag) {
                 $('.page').removeClass('drag');
-                this.nextPage.addClass('back');
-                $(this.$el)[0].style.webkitTransform = 'translate(0, 0)';
-                console.log(2);
+
+                this.setTheClass('nextPage','back');
+                cssVal = {'-webkit-transform': 'translate(0,0)'};
+                view = 'curPage';
             }
             else if (action === 'forward' && !options.drag) {
                 $container.addClass('animate');
-                this.nextPage.addClass('back');
-                this.curPage.addClass('front').show();
+
+                this.setTheClass('nextPage','back');
+                className = 'front';
+                cssVal = {'display': 'block'};
+                view = 'curPage';
             }
             else if (action === 'backward' && !options.drag) {
                 $container.addClass('animate');
-                this.nextPage.addClass('back');
-                this.curPage.addClass('front').show();
+
+                this.setTheClass('nextPage','back');
+                className = 'front';
+                cssVal = {'display': 'block'};
+                view = 'curPage';
             }
+            this.setCss(view,cssVal);
+            this.setTheClass(className);
 
         }
 
