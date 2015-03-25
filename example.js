@@ -187,7 +187,7 @@ $(function(){
         this.main.hide();
         this.footer.hide();
       }
-
+      
       this.allCheckbox.checked = !remaining;
     },
 

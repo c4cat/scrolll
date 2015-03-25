@@ -54,8 +54,8 @@ var PageView = Backbone.View.extend({
     initialize:function() {
         // console.log(this.model.get('test'));
         this.demo = 'demo';
-        this.listenTo(this.model,'change:startPos',this.test);
-        this.listenTo(this.model,'change:endPos',this.test);
+        // this.listenTo(this.model,'change:startPos',this.test);
+        // this.listenTo(this.model,'change:endPos',this.test);
     },
     render:function(){
     	// this.$el.html(this.template(this.model.toJSON())); //replace because we don't need the tag swap
@@ -125,19 +125,20 @@ var PageView = Backbone.View.extend({
             _startPos = this.model.get('startPos');
             _endPos = this.model.get('endPos');
 
+            this.curPage = pages.indexOf(this);
             // if (options.swipeAnim === 'default' && !this.isHeadOrTail()) {
             //     $container.removeClass('drag');
 
             //     if (Math.abs(_endPos-_startPos) <= 50) {
-            //         this.animatePage(curPage);
+            //         this.animatePage(this.curPage);
             //         direction = 'stay';
             //     }
             //     else if (_endPos >= _startPos) {
-            //         this.animatePage(curPage-1);
+            //         this.animatePage(this.curPage-1);
             //         direction = 'backward';
             //     }
             //     else if (_endPos < _startPos) {
-            //         this.animatePage(curPage+1);
+            //         this.animatePage(this.curPage+1);
             //         direction = 'forward';
             //     }
             // }
@@ -145,81 +146,80 @@ var PageView = Backbone.View.extend({
             if (options.swipeAnim === 'cover' && !this.isHeadOrTail()){
 
                 if (Math.abs(_endPos-_startPos) <= 50 && _endPos >= _startPos && options.drag) {
-                    this.animatePage(curPage, 'keep-backward');
+                    this.animatePage(this.curPage, 'keep-backward');
                     this.model.set('direction','stay');
                 }
                 else if (Math.abs(_endPos-_startPos) <= 50 && _endPos < _startPos && options.drag) {
-                    this.animatePage(curPage, 'keep-forward');
+                    this.animatePage(this.curPage, 'keep-forward');
                     this.model.set('direction','stay');
                 }
                 else if (Math.abs(_endPos-_startPos) > 50 && _endPos >= _startPos && options.drag) {
-                    this.animatePage(curPage-1, 'backward');
+                    this.animatePage(this.curPage-1, 'backward');
                     this.model.set('direction','backward');
                 }
                 else if (Math.abs(_endPos-_startPos) > 50 && _endPos < _startPos && options.drag) {
-                    this.animatePage(curPage+1, 'forward')
+                    this.animatePage(this.curPage+1, 'forward')
                     this.model.set('direction','forward');
                 }
                 else if (Math.abs(_endPos-_startPos) > 50 && _endPos >= _startPos && !options.drag) {
-                    this.animatePage(curPage-1, 'backward');
+                    this.animatePage(this.curPage-1, 'backward');
                     this.model.set('direction','backward');
                 }
                 else if (Math.abs(_endPos-_startPos) > 50 && _endPos < _startPos && !options.drag) {
-                    this.animatePage(curPage+1, 'forward')
+                    this.animatePage(this.curPage+1, 'forward')
                     this.model.set('direction','forward');
                 }
             }
             // dot
             // if (options.indicator) {
-   //              $($('.parallax-h-indicator ul li, .parallax-v-indicator ul li').removeClass('current').get(curPage)).addClass('current');
+   //              $($('.parallax-h-indicator ul li, .parallax-v-indicator ul li').removeClass('current').get(this.curPage)).addClass('current');
    //          }
             this.model.set('stage',3);
         }
     },
     dragToMove:function() {
-	    var	current = pages.indexOf(this),
-	    	next = pages.at(current+1),
-	    	prev = pages.at(current-1);
+	    this.nextPage = $(this.$el[0].nextElementSibling),
+	    this.prevPage = $(this.$el[0].prevElementSibling);
 
-	    	console.log(this);
-	    	console.log(next.setElement(next));
+        var endPos = this.model.get('endPos'),
+            startPos = this.model.get('startPos')
+
 
         if (options.swipeAnim === 'default') {
-            var temp = offset + this.model.get('endPos') - this.model.get('startPos');
+            var temp = offset + endPos - startPos;
             this.direction === 'horizontal' ?
                 $container.css("-webkit-transform", "matrix(1, 0, 0, 1, " + temp + ", 0)") :
                 $container.css("-webkit-transform", "matrix(1, 0, 0, 1, 0, " + temp + ")");
         }
         else if (options.swipeAnim === 'cover') {
-            var temp = this.model.get('endPos') - this.model.get('startPos');
-                $prevPage = $($pageArr[curPage-1]),
-                $nextPage = $($pageArr[curPage+1]);
+            var temp = endPos - startPos;
 
-            $($pageArr).css({'z-index': 0});
+            //need to correct
+            $('.page').css({'z-index': 0});
 
             if (this.direction === 'horizontal' && endPos >= startPos) {
-                $prevPage.css({
+                this.prevPage.css({
                     'z-index': 2,
                     'display': 'block',
                     '-webkit-transform': 'translateX('+(temp-pageWidth) +'px)'
                 })
             }
             else if (this.direction === 'horizontal' && endPos < startPos) {
-                $nextPage.css({
+                this.nextPage.css({
                     'z-index': 2,
                     'display': 'block',
                     '-webkit-transform': 'translateX('+(pageWidth+temp) +'px)'
                 })
             }
             else if (this.direction === 'vertical' && endPos >= startPos) {
-                $prevPage.css({
+                this.prevPage.css({
                     'z-index': 2,
                     'display': 'block',
                     '-webkit-transform': 'translateY('+ (temp-pageHeight) +'px)'
                 })
             }
             else if (this.direction === 'vertical' && endPos < startPos) {
-                $nextPage.css({
+                this.nextPage.css({
                     'z-index': 2,
                     'display': 'block',
                     '-webkit-transform': 'translateY('+ (pageHeight+temp) +'px)'
@@ -228,51 +228,57 @@ var PageView = Backbone.View.extend({
         }
     },
     animatePage:function(newPage, action) {
-        curPage = newPage;
+        this.curPage = newPage;
+        this.nextPage = $(this.$el[0].nextElementSibling),
+        this.prevPage = $(this.$el[0].prevElementSibling);
+        
         if (options.swipeAnim === 'default') {
 
             var newOffset = 0;
-            options.direction === 'horizontal' ?
+            this.direction === 'horizontal' ?
                 newOffset = newPage * (-pageWidth) :
                 newOffset = newPage * (-pageHeight);
 
-            options.direction === 'horizontal' ?
+            this.direction === 'horizontal' ?
                 $container.css({'-webkit-transform': 'matrix(1, 0, 0, 1, ' + newOffset + ', 0)'}) :
                 $container.css({'-webkit-transform': 'matrix(1, 0, 0, 1, 0, ' + newOffset + ')'});
 
         }
         else if (options.swipeAnim === 'cover') {
             if (action === 'keep-backward' && options.drag) {
-                $pageArr.removeClass('drag');
-                options.direction === 'horizontal' ?
-                $($pageArr[curPage-1]).css({'-webkit-transform': 'translateX(-100%)'}) :
-                $($pageArr[curPage-1]).css({'-webkit-transform': 'translateY(-100%)'})
+                $('.page').removeClass('drag');
+                this.direction === 'horizontal' ?
+                this.prevPage.css({'-webkit-transform': 'translateX(-100%)'}) :
+                this.prevPage.css({'-webkit-transform': 'translateY(-100%)'})
             }
             else if (action === 'keep-forward' && options.drag) {
-                $pageArr.removeClass('drag');
-                options.direction === 'horizontal' ?
-                $($pageArr[curPage+1]).css({'-webkit-transform': 'translateX(100%)'}) :
-                $($pageArr[curPage+1]).css({'-webkit-transform': 'translateY(100%)'})
+                $('.page').removeClass('drag');
+                this.direction === 'horizontal' ?
+                this.nextPage.css({'-webkit-transform': 'translateX(100%)'}) :
+                this.nextPage.css({'-webkit-transform': 'translateY(100%)'})
             }
             else if (action === 'forward' && options.drag) {
-                $pageArr.removeClass('drag');
-                $($pageArr[curPage-1]).addClass('back'); // 纯粹为了在动画结束后隐藏，不涉及 CSS 中定义的动画
-                $pageArr[curPage].style.webkitTransform = 'translate(0, 0)';
+                $('.page').removeClass('drag');
+                this.prevPage.addClass('back'); // 纯粹为了在动画结束后隐藏，不涉及 CSS 中定义的动画
+                console.log($(this.$el)[0]);
+                $(this.$el)[0].style.webkitTransform = 'translate(0, 0)';
+                console.log(this.prevPage);
             }
             else if (action === 'backward' && options.drag) {
-                $pageArr.removeClass('drag');
-                $($pageArr[curPage+1]).addClass('back');
-                $pageArr[curPage].style.webkitTransform = 'translate(0, 0)';
+                $('.page').removeClass('drag');
+                this.nextPage.addClass('back');
+                $(this.$el)[0].style.webkitTransform = 'translate(0, 0)';
+                console.log(2);
             }
             else if (action === 'forward' && !options.drag) {
                 $container.addClass('animate');
-                $($pageArr[curPage-1]).addClass('back');
-                $($pageArr[curPage]).addClass('front').show();
+                this.nextPage.addClass('back');
+                this.curPage.addClass('front').show();
             }
             else if (action === 'backward' && !options.drag) {
                 $container.addClass('animate');
-                $($pageArr[curPage+1]).addClass('back');
-                $($pageArr[curPage]).addClass('front').show();
+                this.nextPage.addClass('back');
+                this.curPage.addClass('front').show();
             }
 
         }
@@ -283,7 +289,7 @@ var PageView = Backbone.View.extend({
         }, 300);
     },
     addDirecClass:function(){
-        if(options.direction === 'horizontal'){
+        if(this.direction === 'horizontal'){
             if (endPos >= startPos) {
                 $container.removeClass('forward').addClass('backward');
             } else if (endPos < startPos) {
@@ -300,13 +306,13 @@ var PageView = Backbone.View.extend({
     isHeadOrTail:function(){
     	var pageCount = pages.length;
 
-        if (options.direction === 'horizontal') {
-            if ((endPos >= startPos && curPage === 0) ||
-                (endPos <= startPos && curPage === pageCount-1)) {
+        if (this.direction === 'horizontal') {
+            if ((endPos >= startPos && this.curPage === 0) ||
+                (endPos <= startPos && this.curPage === pageCount-1)) {
                 return true;
             }
-        } else if ((endPos >= startPos && curPage === 0) ||
-                (endPos <= startPos && curPage === pageCount-1)) {
+        } else if ((endPos >= startPos && this.curPage === 0) ||
+                (endPos <= startPos && this.curPage === pageCount-1)) {
             return true;
         }
         return false;
@@ -326,8 +332,8 @@ var PageView = Backbone.View.extend({
                     $container.removeClass('forward backward animate');
                 }, 10);
     
-                $($pageArr.removeClass('current').get(curPage)).addClass('current');
-                options.onchange(curPage, $pageArr[curPage], direction);  // 执行回调函数
+                $($('.page').removeClass('current').get(this.curPage)).addClass('current');
+                //options.onchange(this.curPage, $pageArr[this.curPage], direction);  // 执行回调函数
                 //this.animShow();
         }
     },  
@@ -349,16 +355,16 @@ var PageView = Backbone.View.extend({
 
             if ($animation === 'followSlide') {
                 
-                if (options.direction === 'horizontal' && direction === 'forward') {
+                if (this.direction === 'horizontal' && direction === 'forward') {
                     $animation = 'followSlideToLeft';
                 }
-                else if (options.direction === 'horizontal' && direction === 'backward') {
+                else if (this.direction === 'horizontal' && direction === 'backward') {
                     $animation = 'followSlideToRight';
                 }
-                else if (options.direction === 'vertical' && direction === 'forward') {
+                else if (this.direction === 'vertical' && direction === 'forward') {
                     $animation = 'followSlideToTop';
                 }
-                else if (options.direction === 'vertical' && direction === 'backward') {
+                else if (this.direction === 'vertical' && direction === 'backward') {
                     $animation = 'followSlideToBottom';
                 }
                 
